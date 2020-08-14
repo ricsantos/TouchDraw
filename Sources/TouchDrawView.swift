@@ -27,6 +27,9 @@ import UIKit
 
     /// triggered when clear is disabled (only if it previously enabled)
     @objc optional func clearDisabled()
+    
+    /// triggered when the user finishes drawing a stroke
+    @objc optional func didFinishDrawing()
 }
 
 /// A subclass of UIView which allows you to draw on the view using your fingers
@@ -265,6 +268,8 @@ extension TouchDrawView {
         }
 
         touchDrawUndoManager.registerUndo(withTarget: self, selector: #selector(popDrawing), object: nil)
+        
+        delegate?.didFinishDrawing?()
     }
 }
 
