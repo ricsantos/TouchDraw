@@ -271,6 +271,12 @@ extension TouchDrawView {
         
         delegate?.didFinishDrawing?()
     }
+    
+    /// Redraws the stack, which has been modified to not draw any strokes
+    open func redraw() {
+        self.redrawStack()
+    }
+    
 }
 
 // MARK: - Drawing
@@ -297,9 +303,12 @@ fileprivate extension TouchDrawView {
     func redrawStack() {
         beginImageContext()
         image?.draw(in: imageView.bounds)
-        for stroke in stack {
-            drawStroke(stroke)
-        }
+        
+        // Have changed this to _not_ draw the strokes, as we don't want them rendered
+        //for stroke in stack {
+        //    drawStroke(stroke)
+        //}
+        
         endImageContext()
     }
 
