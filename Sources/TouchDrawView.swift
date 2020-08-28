@@ -144,6 +144,17 @@ open class TouchDrawView: UIView {
         stack = []
         redrawStack()
     }
+    
+    /// Reset the drawing and removes all strokes
+    @objc open func resetDrawing() {
+        touchDrawUndoManager.removeAllActions()
+        stack = []
+        redrawStack()
+        
+        delegate?.undoDisabled?()
+        delegate?.redoDisabled?()
+        delegate?.clearDisabled?()
+    }
 
     /// Sets the brush's color
     open func setColor(_ color: UIColor?) {
