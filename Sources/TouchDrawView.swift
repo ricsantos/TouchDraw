@@ -114,6 +114,17 @@ open class TouchDrawView: UIView {
         UIGraphicsEndImageContext()
         return imageFromContext!
     }
+    
+    open func exportStackAsImage() -> UIImage {
+        UIGraphicsBeginImageContextWithOptions(imageView.bounds.size, false, UIScreen.main.scale)
+        //imageView.image?.draw(in: imageView.bounds)
+        for stroke in stack {
+            drawStroke(stroke)
+        }
+        let imageFromContext = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return imageFromContext!
+    }
 
     /// Clears the drawing
     @objc open func clearDrawing() {
