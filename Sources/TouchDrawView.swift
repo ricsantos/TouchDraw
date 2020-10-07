@@ -107,7 +107,7 @@ open class TouchDrawView: UIView {
 
     /// Exports the current drawing
     open func exportDrawing() -> UIImage {
-        UIGraphicsBeginImageContextWithOptions(imageView.bounds.size, false, UIScreen.main.scale)
+        UIGraphicsBeginImageContextWithOptions(imageView.bounds.size, false, 0.0)
         imageView.image?.draw(in: imageView.bounds)
 
         let imageFromContext = UIGraphicsGetImageFromCurrentImageContext()
@@ -116,12 +116,16 @@ open class TouchDrawView: UIView {
     }
     
     open func exportStackAsImage() -> UIImage {
-        UIGraphicsBeginImageContextWithOptions(imageView.bounds.size, false, UIScreen.main.scale)
-        //imageView.image?.draw(in: imageView.bounds)
+        print("exportingStackAsImage, input size: \(imageView.bounds.size)")
+        let scale: CGFloat = 4.0
+        let scaledSize = CGSize(width: imageView.bounds.size.width*scale, height: imageView.bounds.size.height*scale)
+        UIGraphicsBeginImageContextWithOptions(scaledSize, false, 0.0)
         for stroke in stack {
-            drawStroke(stroke)
+            drawStroke(stroke, scale: scale)
         }
         let imageFromContext = UIGraphicsGetImageFromCurrentImageContext()
+        
+        print("exportingStackAsImage, result size: \(imageFromContext!.size)")
         UIGraphicsEndImageContext()
         return imageFromContext!
     }
@@ -228,7 +232,7 @@ open class TouchDrawView: UIView {
     /// Adds a new stroke to the stack
     @objc internal func pushDrawing(_ stroke: Stroke) {
         stack.append(stroke)
-        drawStrokeWithContext(stroke)
+        drawStrokeWithContext(stroke, scale: 1.0)
         touchDrawUndoManager.registerUndo(withTarget: self, selector: #selector(popDrawing), object: nil)
     }
 
@@ -264,7 +268,7 @@ extension TouchDrawView {
             let stroke = stack.last!
             let lastPoint = stroke.points.last
             let currentPoint = touch.location(in: self)
-            drawLineWithContext(fromPoint: lastPoint!, toPoint: currentPoint, properties: stroke.settings)
+            drawLineWithContext(fromPoint: lastPoint!, toPoint: currentPoint, properties: stroke.settings, scale: 1.0)
             stroke.points.append(currentPoint)
         }
     }
@@ -274,7 +278,7 @@ extension TouchDrawView {
         let stroke = stack.last!
         if stroke.points.count == 1 {
             let lastPoint = stroke.points.last!
-            drawLineWithContext(fromPoint: lastPoint, toPoint: lastPoint, properties: stroke.settings)
+            drawLineWithContext(fromPoint: lastPoint, toPoint: lastPoint, properties: stroke.settings, scale: 1.0)
         }
 
         if !touchDrawUndoManager.canUndo {
@@ -307,7 +311,7 @@ fileprivate extension TouchDrawView {
 
     /// Begins the image context
     func beginImageContext() {
-        UIGraphicsBeginImageContextWithOptions(imageView.bounds.size, false, UIScreen.main.scale)
+        UIGraphicsBeginImageContextWithOptions(imageView.bounds.size, false, 0.0)
     }
 
     /// Ends image context and sets UIImage to what was on the context
@@ -335,38 +339,38 @@ fileprivate extension TouchDrawView {
     }
 
     /// Draws a single Stroke
-    func drawStroke(_ stroke: Stroke) {
+    func drawStroke(_ stroke: Stroke, scale: CGFloat) {
         let properties = stroke.settings
         let points = stroke.points
 
         if points.count == 1 {
             let point = points[0]
-            drawLine(fromPoint: point, toPoint: point, properties: properties)
+            drawLine(fromPoint: point, toPoint: point, properties: properties, scale: scale)
         }
 
         for i in stride(from: 1, to: points.count, by: 1) {
             let point0 = points[i - 1]
             let point1 = points[i]
-            drawLine(fromPoint: point0, toPoint: point1, properties: properties)
+            drawLine(fromPoint: point0, toPoint: point1, properties: properties, scale: scale)
         }
     }
 
     /// Draws a single Stroke (begins/ends context
-    func drawStrokeWithContext(_ stroke: Stroke) {
+    func drawStrokeWithContext(_ stroke: Stroke, scale: CGFloat) {
         beginImageContext()
         drawCurrentImage()
-        drawStroke(stroke)
+        drawStroke(stroke, scale: scale)
         endImageContext()
     }
 
     /// Draws a line between two points
-    func drawLine(fromPoint: CGPoint, toPoint: CGPoint, properties: StrokeSettings) {
+    func drawLine(fromPoint: CGPoint, toPoint: CGPoint, properties: StrokeSettings, scale: CGFloat) {
         let context = UIGraphicsGetCurrentContext()
-        context!.move(to: CGPoint(x: fromPoint.x, y: fromPoint.y))
-        context!.addLine(to: CGPoint(x: toPoint.x, y: toPoint.y))
+        context!.move(to: CGPoint(x: round(fromPoint.x*scale), y: round(fromPoint.y*scale)))
+        context!.addLine(to: CGPoint(x: round(toPoint.x*scale), y: round(toPoint.y*scale)))
 
         context!.setLineCap(CGLineCap.round)
-        context!.setLineWidth(properties.width)
+        context!.setLineWidth(properties.width*scale)
 
         let color = properties.color
         if color != nil {
@@ -383,10 +387,10 @@ fileprivate extension TouchDrawView {
     }
 
     /// Draws a line between two points (begins/ends context)
-    func drawLineWithContext(fromPoint: CGPoint, toPoint: CGPoint, properties: StrokeSettings) {
+    func drawLineWithContext(fromPoint: CGPoint, toPoint: CGPoint, properties: StrokeSettings, scale: CGFloat) {
         beginImageContext()
         drawCurrentImage()
-        drawLine(fromPoint: fromPoint, toPoint: toPoint, properties: properties)
+        drawLine(fromPoint: fromPoint, toPoint: toPoint, properties: properties, scale: scale)
         endImageContext()
     }
 }
