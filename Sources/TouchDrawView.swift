@@ -115,11 +115,19 @@ open class TouchDrawView: UIView {
         return imageFromContext!
     }
     
-    open func exportStackAsImage() -> UIImage {
+    open func exportStackAsImage(withOriginalMask mask: UIImage?) -> UIImage {
         print("exportingStackAsImage, input size: \(imageView.bounds.size)")
-        let scale: CGFloat = 4.0
+        var scale: CGFloat = 4.0
+        if let width = mask?.size.width, width > scale*imageView.bounds.size.width {
+            scale = CGFloat(Int(width/imageView.bounds.size.width))
+        }
         let scaledSize = CGSize(width: imageView.bounds.size.width*scale, height: imageView.bounds.size.height*scale)
         UIGraphicsBeginImageContextWithOptions(scaledSize, false, 0.0)
+        
+        if let mask = mask {
+            mask.draw(in: CGRect(origin: .zero, size: scaledSize))
+        }
+                
         for stroke in stack {
             drawStroke(stroke, scale: scale)
         }
