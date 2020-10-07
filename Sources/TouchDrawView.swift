@@ -276,7 +276,9 @@ extension TouchDrawView {
             let stroke = stack.last!
             let lastPoint = stroke.points.last
             let currentPoint = touch.location(in: self)
-            drawLineWithContext(fromPoint: lastPoint!, toPoint: currentPoint, properties: stroke.settings, scale: 1.0)
+            let settings = StrokeSettings(stroke.settings)
+            settings.color = CIColor(red: 1, green: 1, blue: 1, alpha: 0.7)
+            drawLineWithContext(fromPoint: lastPoint!, toPoint: currentPoint, properties: settings, scale: 1.0)
             stroke.points.append(currentPoint)
         }
     }
@@ -286,7 +288,9 @@ extension TouchDrawView {
         let stroke = stack.last!
         if stroke.points.count == 1 {
             let lastPoint = stroke.points.last!
-            drawLineWithContext(fromPoint: lastPoint, toPoint: lastPoint, properties: stroke.settings, scale: 1.0)
+            let settings = StrokeSettings(stroke.settings)
+            settings.color = CIColor(red: 1, green: 1, blue: 1, alpha: 0.7)
+            drawLineWithContext(fromPoint: lastPoint, toPoint: lastPoint, properties: settings, scale: 1.0)
         }
 
         if !touchDrawUndoManager.canUndo {
