@@ -122,7 +122,7 @@ open class TouchDrawView: UIView {
             scale = CGFloat(Int(width/imageView.bounds.size.width))
         }
         let scaledSize = CGSize(width: imageView.bounds.size.width*scale, height: imageView.bounds.size.height*scale)
-        UIGraphicsBeginImageContextWithOptions(scaledSize, false, 0.0)
+        UIGraphicsBeginImageContextWithOptions(scaledSize, false, 1.0)
         
         if let mask = mask {
             mask.draw(in: CGRect(origin: .zero, size: scaledSize))
