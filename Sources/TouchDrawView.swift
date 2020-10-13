@@ -277,7 +277,8 @@ extension TouchDrawView {
             let lastPoint = stroke.points.last
             let currentPoint = touch.location(in: self)
             let settings = StrokeSettings(stroke.settings)
-            settings.color = CIColor(red: 1, green: 1, blue: 1, alpha: 0.7)
+            // Set different pen color for drawing
+            settings.color = CIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
             drawLineWithContext(fromPoint: lastPoint!, toPoint: currentPoint, properties: settings, scale: 1.0)
             stroke.points.append(currentPoint)
         }
@@ -289,7 +290,8 @@ extension TouchDrawView {
         if stroke.points.count == 1 {
             let lastPoint = stroke.points.last!
             let settings = StrokeSettings(stroke.settings)
-            settings.color = CIColor(red: 1, green: 1, blue: 1, alpha: 0.7)
+            // Set different pen color for drawing
+            settings.color = CIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
             drawLineWithContext(fromPoint: lastPoint, toPoint: lastPoint, properties: settings, scale: 1.0)
         }
 
