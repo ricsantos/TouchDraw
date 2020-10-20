@@ -420,9 +420,7 @@ extension UIImage {
         var rect: CGRect = CGRect(x: 0, y: 0, width: CGFloat(width), height: CGFloat(height))
         context?.draw(cgImage!, in: rect)
         
-        let redrawnCGImage = context?.makeImage()
-        let pixelData = redrawnCGImage!.dataProvider!.data
-                
+        let pixelData = self.cgImage!.dataProvider!.data
         let data: UnsafePointer<UInt8> = CFDataGetBytePtr(pixelData)
         
         var minX = width
