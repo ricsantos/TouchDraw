@@ -409,73 +409,52 @@ fileprivate extension TouchDrawView {
     }
 }
 
-/// https://gist.github.com/AdamLantz/d5d841e60583e740c0b5f515ba5064fb
+
+/// https://stackoverflow.com/a/48759198/883413
 extension UIImage {
     public func cropImageByAlpha() -> UIImage {
-        let cgImage = self.cgImage
-        let context = createARGBBitmapContextFromImage(inImage: cgImage!)
-        let height = cgImage!.height
-        let width = cgImage!.width
+        let cgImage = self.cgImage!
         
-        var rect: CGRect = CGRect(x: 0, y: 0, width: CGFloat(width), height: CGFloat(height))
-        context?.draw(cgImage!, in: rect)
+        let width = cgImage.width
+        let height = cgImage.height
         
-        let pixelData = self.cgImage!.dataProvider!.data
-        let data: UnsafePointer<UInt8> = CFDataGetBytePtr(pixelData)
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let bytesPerPixel:Int = 4
+        let bytesPerRow = bytesPerPixel * width
+        let bitsPerComponent = 8
+        let bitmapInfo: UInt32 = CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
+        
+        guard let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: bitsPerComponent, bytesPerRow: bytesPerRow, space: colorSpace, bitmapInfo: bitmapInfo),
+            let ptr = context.data?.assumingMemoryBound(to: UInt8.self) else {
+                return self
+        }
+        
+        context.draw(self.cgImage!, in: CGRect(x: 0, y: 0, width: width, height: height))
         
         var minX = width
         var minY = height
         var maxX: Int = 0
         var maxY: Int = 0
         
-        //Filter through data and look for non-transparent pixels.
-        for y in 0..<height {
-            for x in 0..<width {
-                let pixelIndex = (width * y + x) * 4 /* 4 for A, R, G, B */
+        for x in 1 ..< width {
+            for y in 1 ..< height {
                 
-                if data[Int(pixelIndex)] != 0 { //Alpha value is not zero pixel is not transparent.
-                    if (x < minX) {
-                        minX = x
-                    }
-                    if (x > maxX) {
-                        maxX = x
-                    }
-                    if (y < minY) {
-                        minY = y
-                    }
-                    if (y > maxY) {
-                        maxY = y
-                    }
+                let i = bytesPerRow * Int(y) + bytesPerPixel * Int(x)
+                let a = CGFloat(ptr[i + 3]) / 255.0
+                
+                if(a>0) {
+                    if (x < minX) { minX = x };
+                    if (x > maxX) { maxX = x };
+                    if (y < minY) { minY = y};
+                    if (y > maxY) { maxY = y};
                 }
             }
         }
         
-        rect = CGRect( x: CGFloat(minX), y: CGFloat(minY), width: CGFloat(maxX-minX), height: CGFloat(maxY-minY))
-        let imageScale:CGFloat = self.scale
-        let cgiImage = self.cgImage?.cropping(to: rect)
-        return UIImage(cgImage: cgiImage!, scale: imageScale, orientation: self.imageOrientation)
-    }
-    
-    private func createARGBBitmapContextFromImage(inImage: CGImage) -> CGContext? {
-        
-        let width = cgImage!.width
-        let height = cgImage!.height
-        
-        let bitmapBytesPerRow = width * 4
-        let bitmapByteCount = bitmapBytesPerRow * height
-        
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
-        if colorSpace == nil {
-            return nil
-        }
-        
-        let bitmapData = malloc(bitmapByteCount)
-        if bitmapData == nil {
-            return nil
-        }
-        
-        let context = CGContext (data: bitmapData, width: width, height: height, bitsPerComponent: 8, bytesPerRow: bitmapBytesPerRow, space: colorSpace, bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue)
-        
-        return context
+        let rect = CGRect(x: CGFloat(minX), y: CGFloat(minY), width: CGFloat(maxX-minX+1), height: CGFloat(maxY-minY+1))
+        let imageScale: CGFloat = self.scale
+        let croppedImage =  self.cgImage!.cropping(to: rect)!
+        let result = UIImage(cgImage: croppedImage, scale: imageScale, orientation: self.imageOrientation)
+        return result
     }
 }
